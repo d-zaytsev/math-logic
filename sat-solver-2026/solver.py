@@ -1,3 +1,4 @@
+import random
 import sys
 from threading import Event
 
@@ -5,20 +6,37 @@ from utils import SATSolverResult, lit_to_dimacs, load_formula
 
 
 class Solver:
+    literal_values: list[int]
+    """values[ℓ] = 1 (истинен), -1 (ложен), 0 (не означен)"""
+    num_list: int
+    """Количество литералов."""
+    num_vars: int
+    """Количество переменных."""
+    trail: list[int]
+    """Означенные литералы (индексы) в порядке присваивания."""
+    propagated: int
+    """Индекс в списке `trail`, `trail[:propagated]` уже распространены, `trail[propagated:]` — ещё нет"""
+    control: list[int]
+    """`control[i]` — позиция в `trail` литерала-решения уровня `i + 1`;
+    текущий уровень решения = `len(control)` (число сделанных догадок).
+    Уровень решения равен числу сделанных догадок. Догадка = литерал-решение."""
+    units: list[int]
+    """Литералы (индексы) единичных дизъюнктов."""
+
     def __init__(self, filename: str, sigkill: Event):
         self.sigkill = sigkill
         self.formula = load_formula(filename)
-        self.vars_count = self.formula.num_vars
-        self.literals_count = self.formula.num_lits
+        self.num_vars = self.formula.num_vars
+        num_lits = self.formula.num_lits
 
-        # Присваивание: values[ℓ] = 1 (истинен), -1 (ложен), 0 (не означен).
+        # Присваивание: .
         # Хранится и для ℓ, и для ¬ℓ: values[ℓ] == -values[ℓ ^ 1].
-        self.literals = [0] * self.literals_count
+        self.literal_values = [0] * num_lits
 
         # Трейл — означенные литералы в порядке присваивания.
         # trail[:propagated] уже распространены, trail[propagated:] — ещё нет.
         self.trail = []
-        self.propagated_ref = 0
+        self.propagated = 0
 
         # control[i] — позиция в trail решения уровня i + 1;
         # текущий уровень решения = len(control).
@@ -49,13 +67,14 @@ class Solver:
             else:
                 self.clauses.append(list(lits))
 
+    @property
     def level(self) -> int:
         return len(self.control)
 
     def assign(self, lit: int):
         """Сделать ℓ истинным на текущем уровне."""
-        self.literals[lit] = 1
-        self.literals[lit ^ 1] = -1
+        self.literal_values[lit] = 1
+        self.literal_values[lit ^ 1] = -1
         self.trail.append(lit)
 
     def decide(self, lit: int):
@@ -71,7 +90,7 @@ class Solver:
         """Отменить все присваивания уровней > level."""
         if level >= len(self.control):
             return
-        values, trail = self.literals, self.trail
+        values, trail = self.literal_values, self.trail
         start = self.control[level]
         for i in range(start, len(trail)):
             lit = trail[i]
@@ -79,14 +98,20 @@ class Solver:
             values[lit ^ 1] = 0
         del trail[start:]
         del self.control[level:]
-        self.propagated_ref = start
+        self.propagated = start
 
     def save_model(self):
-        values = self.literals
+        values = self.literal_values
         self.model = [
             lit_to_dimacs(2 * v if values[2 * v] > 0 else 2 * v + 1)
-            for v in range(1, self.vars_count + 1)
+            for v in range(1, self.num_vars + 1)
         ]
+
+    def build_occurrences(self):
+        self.occurrences = [[] for _ in range(self.formula.num_lits)]
+        for c in self.clauses:
+            for lit in c:
+                self.occurrences[lit].append(c)
 
     def build_watches(self):
         num_lits = self.formula.num_lits
@@ -105,27 +130,33 @@ class Solver:
         UnitPropagate: распространить литералы trail[propagated:].
         Возвращает True, если найден конфликт (все литералы дизъюнкта ложны).
         """
-        occurrences: list[list] = [[] for _ in range(self.formula.num_lits)]
-        for c in self.clauses:
-            for lit in c:
-                occurrences[lit].append(c)
-        
-        while self.propagated_ref < len(self.trail):
-            false_lit = self.trail[self.propagated_ref] ^ 1
-            self.propagated_ref += 1
+        # UnitPropagate
+        changed = True
+        while changed:
+            changed = False
+            for c in self.clauses:
+                if any(self.literal_values[x] == 1 for x in c):
+                    continue  # клоза выполнена
+                if not (free := [x for x in c if self.literal_values[x] == 0]):
+                    return True  # конфликт
+                elif len(free) == 1:  # единичный клоз
+                    self.assign(free[0])
+                    changed = True
 
-            for c in occurrences[false_lit]:
-                unassigned = []
-                for lit in c:
-                    if self.literals[lit] > 0:
-                        break
-                    if self.literals[lit] == 0:
-                        unassigned.append(lit)
-                else:
-                    if len(unassigned) == 0:
-                        return True
-                    if len(unassigned) == 1:
-                        self.assign(unassigned[0])
+        # EliminatePureLiteral
+        occurring = {
+            l
+            for c in self.clauses
+            for l in c
+            if self.literal_values[l] != 0
+        }
+        for l in range(self.formula.num_lits):
+            if (
+                self.literal_values[l] == 0
+                and l ^ 1 not in occurring
+            ):
+                self.assign(l)
+
         return False
 
     def choose_literal(self) -> int | None:
@@ -133,37 +164,39 @@ class Solver:
         ChooseLiteral: литерал для следующего решения или None, если все
         переменные означены.
         """
-        for v in range(1, self.vars_count + 1):
-            if self.literals[2 * v] == 0:
-                return 2 * v + 1
+        for c in self.clauses:
+            for l in c:
+                if self.literal_values[l] == 0:
+                    return l
         return None
 
     def solve(self) -> SATSolverResult:
         if self.has_empty_clause:
             return SATSolverResult.UNSAT
-
-        for lit in self.units:
-            if self.literals[lit] < 0:
+        
+        for l in self.units:
+            if self.literal_values[l] == -1:
                 return SATSolverResult.UNSAT
-            if self.literals[lit] == 0:
-                self.assign(lit)
+            if self.literal_values[l] == 0:
+                self.assign(l)
 
         while True:
             if self.sigkill.is_set():
                 return SATSolverResult.UNKNOWN
 
-            if self.propagate():  # backtrack
-                if self.level() == 0:
+            if self.propagate():
+                # Был обнаружен конфликт
+                
+                if self.level == 0:  # откатываться уже некуда
                     return SATSolverResult.UNSAT
 
-                lit = self.decision(self.level())
-                self.backtrack(self.level() - 1)
-                self.assign(lit ^ 1)
-                continue
+                l_decision = self.decision(self.level)
+                self.backtrack(self.level - 1)
+                self.decide(l_decision ^ 1)
+                continue  # повторяем алгоритм
 
-            lit = self.choose_literal()
-
-            if lit is None:  # find solution!!!
+            if (lit := self.choose_literal()) is None:
+                # литералы закончились
                 return SATSolverResult.SAT
             else:
                 self.decide(lit)
