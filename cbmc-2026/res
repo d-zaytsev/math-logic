@@ -1,0 +1,315 @@
+Running: cbmc sort.c --function check --unwinding-assertions --verbosity 8 -DLEN=6 --unwind 8
+sort/check: OK
+Running: cbmc hacks.c --function check1 --unwinding-assertions --verbosity 8 --unwind 35
+CBMC version 6.11.0 (cbmc-6.11.0) 64-bit x86_64 linux
+Type-checking hacks
+Generating GOTO Program
+Adding CPROVER library (x86_64)
+Removal of function pointers and virtual functions
+Generic Property Instrumentation
+Running with 8 object bits, 56 offset bits (default)
+Starting Bounded Model Checking
+Runtime Symex: 0.00160997s
+size of program expression: 43 steps
+simple slicing removed 2 assignments
+Generated 1 VCC(s), 1 remaining after simplification
+Runtime Postprocess Equation: 2.4106e-05s
+Passing problem to propositional reduction
+converting SSA
+Runtime Convert SSA: 0.00065513s
+Running propositional reduction
+Runtime Post-process: 4.466e-06s
+474 variables, 663 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 0.00062401s
+Runtime decision procedure: 0.00131956s
+
+** Results:
+hacks.c function abs
+[abs.overflow.1] line 25 arithmetic overflow on signed unary minus in -x: SUCCESS
+
+hacks.c function abs_optimized
+[abs_optimized.overflow.1] line 33 arithmetic overflow on signed + in x + mask: SUCCESS
+
+hacks.c function check1
+[check1.assertion.1] line 20 assertion have_different_signs(x, y) == have_different_signs_optimized(x, y): FAILURE
+
+hacks.c function check2
+[check2.assertion.1] line 40 assertion abs(c) == abs_optimized(c): SUCCESS
+
+hacks.c function check3
+[check3.assertion.1] line 66 assertion is_power_of_two(c) == is_power_of_two_optimized(c): SUCCESS
+
+hacks.c function is_power_of_two
+[is_power_of_two.overflow.1] line 48 arithmetic overflow on signed - in i - 1: SUCCESS
+
+** 1 of 6 failed (2 iterations)
+VERIFICATION FAILED
+
+hacks/check1: НЕ ПРОЙДЕНО
+Running: cbmc hacks.c --function check2 --unwinding-assertions --verbosity 8 --unwind 35
+hacks/check2: OK
+Running: cbmc hacks.c --function check3 --unwinding-assertions --verbosity 8 --unwind 35
+hacks/check3: OK
+Running: cbmc strfind.c --function main --unwinding-assertions --verbosity 8 -DLEN=10 --unwind 12
+strfind/main: OK
+Running: cbmc crc64.c --function check_unique --unwinding-assertions --verbosity 8 -DSTRLEN=3 --unwind 5
+crc/check_unique: OK
+Running: cbmc crc64.c --function check_decode --unwinding-assertions --verbosity 8 -DSTRLEN=1 --unwind 3 --trace
+Running: cbmc crc64.c --function check_decode --unwinding-assertions --verbosity 8 -DSTRLEN=2 --unwind 4 --trace
+Running: cbmc crc64.c --function check_decode --unwinding-assertions --verbosity 8 -DSTRLEN=3 --unwind 5 --trace
+CBMC version 6.11.0 (cbmc-6.11.0) 64-bit x86_64 linux
+Type-checking crc64
+Generating GOTO Program
+Adding CPROVER library (x86_64)
+Removal of function pointers and virtual functions
+Generic Property Instrumentation
+Running with 8 object bits, 56 offset bits (default)
+Starting Bounded Model Checking
+Unwinding loop check_decode.0 iteration 1 file crc64.c line 242 function check_decode thread 0
+Unwinding loop check_decode.0 iteration 2 file crc64.c line 242 function check_decode thread 0
+Unwinding loop check_decode.0 iteration 3 file crc64.c line 242 function check_decode thread 0
+Unwinding loop crc64.0 iteration 1 file crc64.c line 104 function crc64 thread 0
+Unwinding loop crc64.0 iteration 2 file crc64.c line 104 function crc64 thread 0
+Unwinding loop crc64.0 iteration 3 file crc64.c line 104 function crc64 thread 0
+Runtime Symex: 0.0110095s
+size of program expression: 116 steps
+simple slicing removed 4 assignments
+Generated 28 VCC(s), 7 remaining after simplification
+Runtime Postprocess Equation: 2.255e-05s
+Passing problem to propositional reduction
+converting SSA
+Runtime Convert SSA: 0.034772s
+Running propositional reduction
+Runtime Post-process: 5.625e-06s
+4460 variables, 60704 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 0.100398s
+Runtime decision procedure: 0.135326s
+Building error trace
+Running propositional reduction
+4461 variables, 0 clauses
+SAT checker inconsistent: instance is UNSATISFIABLE
+Runtime Solver: 2.51e-05s
+Runtime decision procedure: 9.1514e-05s
+
+** Results:
+crc64.c function check_decode
+[check_decode.array_bounds.1] line 247 array 'buf' upper bound in buf[(signed long int)i]: SUCCESS
+[check_decode.assertion.1] line 250 assertion crc64(0ULL, (const unsigned char *)buf, STRLEN) != HASH: FAILURE
+
+crc64.c function check_unique
+[check_unique.array_bounds.1] line 227 array 'buf1' upper bound in buf1[(signed long int)i]: SUCCESS
+[check_unique.array_bounds.2] line 228 array 'buf2' upper bound in buf2[(signed long int)i]: SUCCESS
+[check_unique.assertion.1] line 233 assertion crc64(0, (const unsigned char *)buf1, STRLEN) != crc64(0, (const unsigned char *)buf2, STRLEN): SUCCESS
+
+crc64.c function crc64
+[crc64.pointer_dereference.1] line 106 dereference failure: pointer NULL in *tmp_post_data: SUCCESS
+[crc64.pointer_dereference.2] line 106 dereference failure: pointer invalid in *tmp_post_data: SUCCESS
+[crc64.pointer_dereference.3] line 106 dereference failure: deallocated dynamic object in *tmp_post_data: SUCCESS
+[crc64.pointer_dereference.4] line 106 dereference failure: dead object in *tmp_post_data: SUCCESS
+[crc64.pointer_dereference.5] line 106 dereference failure: pointer outside object bounds in *tmp_post_data: SUCCESS
+[crc64.pointer_dereference.6] line 106 dereference failure: invalid integer address in *tmp_post_data: SUCCESS
+[crc64.array_bounds.1] line 107 array 'crc64_tab' lower bound in crc64_tab[(signed long int)i]: SUCCESS
+[crc64.array_bounds.2] line 107 array 'crc64_tab' upper bound in crc64_tab[(signed long int)i]: SUCCESS
+
+crc64.c function fio_crc64
+[fio_crc64.array_bounds.1] line 206 array 'crctab64' upper bound in crctab64[(signed long int)((crc ^ (unsigned long int)*tmp_post_buffer) & (unsigned long int)0xFF)]: SUCCESS
+[fio_crc64.pointer_dereference.1] line 206 dereference failure: pointer NULL in *tmp_post_buffer: SUCCESS
+[fio_crc64.pointer_dereference.2] line 206 dereference failure: pointer invalid in *tmp_post_buffer: SUCCESS
+[fio_crc64.pointer_dereference.3] line 206 dereference failure: deallocated dynamic object in *tmp_post_buffer: SUCCESS
+[fio_crc64.pointer_dereference.4] line 206 dereference failure: dead object in *tmp_post_buffer: SUCCESS
+[fio_crc64.pointer_dereference.5] line 206 dereference failure: pointer outside object bounds in *tmp_post_buffer: SUCCESS
+[fio_crc64.pointer_dereference.6] line 206 dereference failure: invalid integer address in *tmp_post_buffer: SUCCESS
+
+Trace for check_decode.assertion.1:
+
+State 13 file crc64.c function check_decode line 239 thread 0
+----------------------------------------------------
+  buf={ 0, 0, 0, 0 } ({ 00000000, 00000000, 00000000, 00000000 })
+
+State 14 file crc64.c function check_decode line 240 thread 0
+----------------------------------------------------
+  buf[3l]=0 (00000000)
+
+State 16 file crc64.c function check_decode line 242 thread 0
+----------------------------------------------------
+  i=0ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000)
+
+State 20 file crc64.c function check_decode line 244 thread 0
+----------------------------------------------------
+  return_value_nondet_int=97 (00000000 00000000 00000000 01100001)
+
+State 21 file crc64.c function check_decode line 244 thread 0
+----------------------------------------------------
+  c=97 (00000000 00000000 00000000 01100001)
+
+Assumption:
+  file crc64.c line 245 function check_decode
+  c == 32 || c >= 97 && c <= 122
+
+State 23 file crc64.c function check_decode line 247 thread 0
+----------------------------------------------------
+  buf[0l]='a' (01100001)
+
+State 24 file crc64.c function check_decode line 242 thread 0
+----------------------------------------------------
+  i=1ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001)
+
+State 29 file crc64.c function check_decode line 244 thread 0
+----------------------------------------------------
+  return_value_nondet_int=98 (00000000 00000000 00000000 01100010)
+
+State 30 file crc64.c function check_decode line 244 thread 0
+----------------------------------------------------
+  c=98 (00000000 00000000 00000000 01100010)
+
+Assumption:
+  file crc64.c line 245 function check_decode
+  c == 32 || c >= 97 && c <= 122
+
+State 32 file crc64.c function check_decode line 247 thread 0
+----------------------------------------------------
+  buf[1l]='b' (01100010)
+
+State 33 file crc64.c function check_decode line 242 thread 0
+----------------------------------------------------
+  i=2ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010)
+
+State 38 file crc64.c function check_decode line 244 thread 0
+----------------------------------------------------
+  return_value_nondet_int=99 (00000000 00000000 00000000 01100011)
+
+State 39 file crc64.c function check_decode line 244 thread 0
+----------------------------------------------------
+  c=99 (00000000 00000000 00000000 01100011)
+
+Assumption:
+  file crc64.c line 245 function check_decode
+  c == 32 || c >= 97 && c <= 122
+
+State 41 file crc64.c function check_decode line 247 thread 0
+----------------------------------------------------
+  buf[2l]='c' (01100011)
+
+State 42 file crc64.c function check_decode line 242 thread 0
+----------------------------------------------------
+  i=3ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000011)
+
+State 48 file crc64.c function check_decode line 250 thread 0
+----------------------------------------------------
+  seed=0ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000)
+
+State 49 file crc64.c function check_decode line 250 thread 0
+----------------------------------------------------
+  data=(const unsigned char *)buf!0@1 (00000010 00000000 00000000 00000000 00000000 00000000 00000000 00000000)
+
+State 50 file crc64.c function check_decode line 250 thread 0
+----------------------------------------------------
+  len=3ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000011)
+
+State 52 file crc64.c function crc64 line 102 thread 0
+----------------------------------------------------
+  crc=0ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000)
+
+State 54 file crc64.c function crc64 line 104 thread 0
+----------------------------------------------------
+  tmp_post_len=3ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000011)
+
+State 55 file crc64.c function crc64 line 104 thread 0
+----------------------------------------------------
+  len=2ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010)
+
+State 59 file crc64.c function crc64 line 106 thread 0
+----------------------------------------------------
+  tmp_post_data=(const unsigned char *)buf!0@1 (00000010 00000000 00000000 00000000 00000000 00000000 00000000 00000000)
+
+State 60 file crc64.c function crc64 line 106 thread 0
+----------------------------------------------------
+  data=(const unsigned char *)buf!0@1 + 1l (00000010 00000000 00000000 00000000 00000000 00000000 00000000 00000001)
+
+State 61 file crc64.c function crc64 line 106 thread 0
+----------------------------------------------------
+  i=97 (00000000 00000000 00000000 01100001)
+
+State 64 file crc64.c function crc64 line 107 thread 0
+----------------------------------------------------
+  crc=6093108618008534114ul (01010100 10001111 00010010 00000001 01100010 01000101 00011100 01100010)
+
+State 67 file crc64.c function crc64 line 104 thread 0
+----------------------------------------------------
+  tmp_post_len=2ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010)
+
+State 68 file crc64.c function crc64 line 104 thread 0
+----------------------------------------------------
+  len=1ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001)
+
+State 72 file crc64.c function crc64 line 106 thread 0
+----------------------------------------------------
+  tmp_post_data=(const unsigned char *)buf!0@1 + 1l (00000010 00000000 00000000 00000000 00000000 00000000 00000000 00000001)
+
+State 73 file crc64.c function crc64 line 106 thread 0
+----------------------------------------------------
+  data=(const unsigned char *)buf!0@1 + 2l (00000010 00000000 00000000 00000000 00000000 00000000 00000000 00000010)
+
+State 74 file crc64.c function crc64 line 106 thread 0
+----------------------------------------------------
+  i=54 (00000000 00000000 00000000 00110110)
+
+State 77 file crc64.c function crc64 line 107 thread 0
+----------------------------------------------------
+  crc=16827469044354936264ul (11101001 10000111 00101101 11110000 10101001 10101000 01101101 11001000)
+
+State 80 file crc64.c function crc64 line 104 thread 0
+----------------------------------------------------
+  tmp_post_len=1ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001)
+
+State 81 file crc64.c function crc64 line 104 thread 0
+----------------------------------------------------
+  len=0ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000)
+
+State 85 file crc64.c function crc64 line 106 thread 0
+----------------------------------------------------
+  tmp_post_data=(const unsigned char *)buf!0@1 + 2l (00000010 00000000 00000000 00000000 00000000 00000000 00000000 00000010)
+
+State 86 file crc64.c function crc64 line 106 thread 0
+----------------------------------------------------
+  data=(const unsigned char *)buf!0@1 + 3l (00000010 00000000 00000000 00000000 00000000 00000000 00000000 00000011)
+
+State 87 file crc64.c function crc64 line 106 thread 0
+----------------------------------------------------
+  i=138 (00000000 00000000 00000000 10001010)
+
+State 90 file crc64.c function crc64 line 107 thread 0
+----------------------------------------------------
+  crc=7372421403230734421ul (01100110 01010000 00011010 00110100 10011010 00001110 00001000 01010101)
+
+State 93 file crc64.c function crc64 line 104 thread 0
+----------------------------------------------------
+  tmp_post_len=0ul (00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000)
+
+State 94 file crc64.c function crc64 line 104 thread 0
+----------------------------------------------------
+  len=18446744073709551615ul (11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111)
+
+State 96 file crc64.c function crc64 line 110 thread 0
+----------------------------------------------------
+  goto_symex$$return_value$$crc64=7372421403230734421ul (01100110 01010000 00011010 00110100 10011010 00001110 00001000 01010101)
+
+State 98 file crc64.c function check_decode line 250 thread 0
+----------------------------------------------------
+  return_value_crc64=7372421403230734421ul (01100110 01010000 00011010 00110100 10011010 00001110 00001000 01010101)
+
+Violated property:
+  file crc64.c function check_decode line 250 thread 0
+  assertion crc64(0ULL, (const unsigned char *)buf, STRLEN) != HASH
+  FALSE
+
+
+
+** 1 of 20 failed (2 iterations)
+VERIFICATION FAILED
+
+crc/check_decode: ошибка проверки или неверное сообщение при длине 3
+
+Набрано баллов: 7 из 10
